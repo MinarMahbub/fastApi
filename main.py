@@ -494,39 +494,162 @@
 #     return items[item_id]
 
 # Multiple Models
+# from typing import List
 
-from typing import Union
+# from fastapi import FastAPI
+# from pydantic import BaseModel
+
+# app = FastAPI()
+
+
+# class Item(BaseModel):
+#     name: str
+#     description: str
+
+
+# items = [
+#     {"name": "Foo", "description": "There comes my hero"},
+#     {"name": "Red", "description": "It's my aeroplane"},
+# ]
+
+
+# @app.get("/items/", response_model=List[Item])
+# async def read_items():
+#     return items
+
+# Form Data
+
+# from fastapi import FastAPI , Form
+# from pydantic import BaseModel
+# from typing_extensions import Annotated
+
+# app = FastAPI()
+
+# class FormData(BaseModel):
+#     username: str
+#     password: str
+#     model_config = {"extra": "forbid"}
+
+# @app.post("/login/")
+# async def login(data:Annotated[FormData, Form()]):
+#     return data
+ 
+
+# Request Files
+# from typing import Union, List
+
+# from fastapi import FastAPI, File, UploadFile
+# from fastapi.responses import HTMLResponse
+# from typing_extensions import Annotated
+
+# app = FastAPI()
+
+# @app.post("/files/")
+# async def create_file(files: Annotated[List[bytes], File()]):
+#     return {"file_sizes" : [len(file) for file in files] }
+
+# @app.post("/uploadfile/")
+# async def create_upload_file(
+#     files: List[UploadFile]
+# ):
+#     return {"filename" : file.filename for file in files}
+# @app.get("/")
+# async def main():
+#     content = """
+# <body>
+# <form action = "/files/" entype = "multipart/formdata" method = "post">
+# <input name = "files" type = "file" multiple>
+# <input type = "submit">
+# </form>
+# <form actioin = "/uploadfiles/" enctype = "multipart/form-data" method = "post">
+# <input name = "files" type = "file" multiple>
+# <input type = "submit">
+# </form>
+# </body>
+#     """
+#     return HTMLResponse(content=content)
+
+# Request Forms and Files
+
+# from fastapi import fastAPI, File, Form, UploadFile
+# from typing_extensions import Annotated
+
+# app = fastAPI()
+
+# @app.post('/files')
+# async def create_file(
+#     file: Annotated[bytes, File()],
+#     fileb: Annotated[UploadFile, File()],
+#     token: Annotated[str, Form()],
+# ):
+#     return{
+#         "file_size": len(file),
+#         "token": token,
+#         'file_content_type': fileb.content_type
+#     }
+
+# Path Operation Configuration
+
+# from enum import  Enum
+
+from typing import Set, Union
 
 from fastapi import FastAPI
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 app = FastAPI()
 
-class UserBase(BaseModel):
-    username: str
-    email: EmailStr
-    full_name: Union[str, None] = None
+# class Tags(Enum):
+#     items = "items"
+#     users = "users"
 
-class UserIn(UserBase):
-    password: str
+# @app.get("/items/", tags= [Tags.items])
+# async def get_items():
+#     return ["Portal gun", "Plumbus"]
 
-class UserOut(UserBase):
-    pass
+# @app.get("/users/", tags= [Tags.users])
+# async def read_user():
+#     return ["Rick", "Morty"]
 
-class UserInDB(UserBase):
-    hashed_password: str
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: Union[float, None] = None
+    tags: Set[str] = set()
 
-def fake_password_hasher(raw_password: str):
-    return "supersecret" + raw_password
+@app.post(
+    "/items/",
+    response_model= Item,
+    summary= "Create an Item",
+    response_description= "The created item"
+    
+)
+async def create_item(item: Item):
+    """
+    Create an item with all the information
 
-def fake_save_user(user_in: UserIn):
-    hashed_password = fake_password_hasher(user_in.password)
-    user_in_db = UserInDB(**user_in.dict(), hashed_password= hashed_password)
-    print("User saved  ..not really")
-    return user_in_db
+    - **name**: each item must have a name
+    - **description**: a long description
+    - **price**: required
+    - **tax**: if the item doesn't have tax, you can omit this
+    - **tags**: a set of unique tag strings for this item
 
-@app.post("/user/", response_model= UserOut)
-async def create_user(user_in: UserIn):
-    user_saved = fake_save_user(user_in)
-    return user_saved
+    """
+    return item
 
+# from fastapi import FastAPI
+
+# app = FastAPI()
+
+# @app.get("/items/", tags= ["items"])
+# async def read_items():
+#     return [{"name": "Foo", "price": 42}]
+
+# @app.get("/users/", tags=["users"])
+# async def read_users():
+#     return [{"username": 'Johndoe'}]
+
+# @app.get("/elements/", tags= ["items"], deprecated= True)
+# async def read_elements():
+#     return [ {"item_id": "Foo"}]
